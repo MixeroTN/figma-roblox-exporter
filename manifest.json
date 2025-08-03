@@ -1,0 +1,23 @@
+{
+  "name": "Roblox Image Exporter",
+  "id": "roblox-image-exporter",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "menu": [
+    {
+      "name": "Export for Roblox",
+      "command": "export-roblox"
+    }
+  ],
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  }
+}

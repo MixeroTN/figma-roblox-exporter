@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Roblox Image Exporter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #333;
+      background: #f8f9fa;
+      padding: 16px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e5e9;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e1e1e;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .selection-info {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #e1e5e9;
+    }
+
+    .selection-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1e1e1e;
+    }
+
+    .selected-items {
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .selected-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin: 2px 0;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .item-icon {
+      width: 16px;
+      height: 16px;
+      background: #0d99ff;
+      border-radius: 2px;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 8px;
+      font-weight: bold;
+    }
+
+    .item-info {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #1e1e1e;
+    }
+
+    .item-details {
+      color: #666;
+      font-size: 10px;
+    }
+
+    .no-selection {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    .export-section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #e1e5e9;
+    }
+
+    .export-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1e1e1e;
+    }
+
+    .scale-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .scale-button {
+      background: #0d99ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .scale-button:hover {
+      background: #0b7ce6;
+      transform: translateY(-1px);
+    }
+
+    .scale-button:active {
+      transform: translateY(0);
+    }
+
+    .scale-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .scale-label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .scale-desc {
+      display: block;
+      font-size: 9px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      text-align: center;
+      display: none;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .processing-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #bee5eb;
+      border-top: 2px solid #0c5460;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .info-section {
+      background: #e8f4fd;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 11px;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .info-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .info-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .info-list li {
+      margin-bottom: 4px;
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .info-list li:before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #0d99ff;
+    }
+
+    /* Hidden canvas for image processing */
+    #processingCanvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Roblox Image Exporter</h1>
+    <p>Export images optimized for Roblox with border processing</p>
+  </div>
+
+  <div class="selection-info">
+    <div class="selection-title">Selected Items</div>
+    <div id="selectedItems" class="selected-items">
+      <div class="no-selection">Select layers in Figma to export</div>
+    </div>
+  </div>
+
+  <div class="export-section">
+    <div class="export-title">Export Options</div>
+    <div class="scale-options">
+      <button class="scale-button" onclick="exportWithScale(1)" id="export1x" disabled>
+        <span class="scale-label">1x</span>
+        <span class="scale-desc">Original</span>
+      </button>
+      <button class="scale-button" onclick="exportWithScale(2)" id="export2x" disabled>
+        <span class="scale-label">2x</span>
+        <span class="scale-desc">Double</span>
+      </button>
+      <button class="scale-button" onclick="exportWithScale(4)" id="export4x" disabled>
+        <span class="scale-label">4x</span>
+        <span class="scale-desc">Quad</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <div class="info-section">
+    <div class="info-title">Roblox Optimization</div>
+    <ul class="info-list">
+      <li>Adds transparent border to prevent artifacts</li>
+      <li>Extends edge pixels for smooth blending</li>
+      <li>Optimizes alpha channel for Roblox compression</li>
+      <li>Maintains image quality at all scales</li>
+    </ul>
+  </div>
+
+  <!-- Hidden canvas for image processing -->
+  <canvas id="processingCanvas"></canvas>
+
+  <script>
+    let selectedNodes = [];
+    let isProcessing = false;
+
+    // Handle messages from the plugin code
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      
+      switch (msg.type) {
+        case 'selection-changed':
+          updateSelection(msg.nodes);
+          break;
+        case 'export-started':
+          showStatus(msg.message, 'processing');
+          setProcessing(true);
+          break;
+        case 'export-completed':
+          showStatus(msg.message, 'success');
+          setProcessing(false);
+          break;
+        case 'error':
+          showStatus(msg.message, 'error');
+          setProcessing(false);
+          break;
+        case 'download-image':
+          downloadProcessedImage(msg.imageData, msg.filename);
+          break;
+        case 'process-image':
+          processImageForRoblox(msg.imageData, msg.scale, msg.borderSize);
+          break;
+      }
+    };
+
+    // Update the selection display
+    function updateSelection(nodes) {
+      selectedNodes = nodes;
+      const container = document.getElementById('selectedItems');
+      
+      if (nodes.length === 0) {
+        container.innerHTML = '<div class="no-selection">Select layers in Figma to export</div>';
+        setExportButtonsEnabled(false);
+        return;
+      }
+      
+      container.innerHTML = '';
+      nodes.forEach(node => {
+        const item = document.createElement('div');
+        item.className = 'selected-item';
+        
+        const icon = getNodeIcon(node.type);
+        item.innerHTML = `
+          <div class="item-icon">${icon}</div>
+          <div class="item-info">
+            <div class="item-name">${node.name}</div>
+            <div class="item-details">${node.type} • ${Math.round(node.width)}×${Math.round(node.height)}</div>
+          </div>
+        `;
+        
+        container.appendChild(item);
+      });
+      
+      setExportButtonsEnabled(true);
+    }
+
+    // Get icon for node type
+    function getNodeIcon(type) {
+      const icons = {
+        'FRAME': 'F',
+        'COMPONENT': 'C',
+        'INSTANCE': 'I',
+        'GROUP': 'G',
+        'RECTANGLE': 'R',
+        'ELLIPSE': 'E',
+        'POLYGON': 'P',
+        'STAR': 'S',
+        'VECTOR': 'V',
+        'TEXT': 'T'
+      };
+      return icons[type] || '?';
+    }
+
+    // Enable/disable export buttons
+    function setExportButtonsEnabled(enabled) {
+      const buttons = ['export1x', 'export2x', 'export4x'];
+      buttons.forEach(id => {
+        document.getElementById(id).disabled = !enabled || isProcessing;
+      });
+    }
+
+    // Set processing state
+    function setProcessing(processing) {
+      isProcessing = processing;
+      setExportButtonsEnabled(selectedNodes.length > 0);
+    }
+
+    // Export with specific scale
+    function exportWithScale(scale) {
+      if (selectedNodes.length === 0 || isProcessing) return;
+      
+      parent.postMessage({
+        pluginMessage: {
+          type: 'export-roblox',
+          scale: scale
+        }
+      }, '*');
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.className = `status ${type}`;
+      
+      if (type === 'processing') {
+        status.innerHTML = `<span class="processing-spinner"></span>${message}`;
+      } else {
+        status.innerHTML = message;
+      }
+      
+      status.style.display = 'block';
+      
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 4000);
+      }
+    }
+
+    // Process image for Roblox using canvas
+    async function processImageForRoblox(base64Data, scale, borderSize) {
+      try {
+        const canvas = document.getElementById('processingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create image from base64 data
+        const img = new Image();
+        
+        img.onload = function() {
+          const originalWidth = img.width;
+          const originalHeight = img.height;
+          const finalWidth = originalWidth + (borderSize * 2);
+          const finalHeight = originalHeight + (borderSize * 2);
+          
+          // Set canvas size
+          canvas.width = finalWidth;
+          canvas.height = finalHeight;
+          
+          // Clear canvas with transparent background
+          ctx.clearRect(0, 0, finalWidth, finalHeight);
+          
+          // Draw original image in center
+          ctx.drawImage(img, borderSize, borderSize);
+          
+          // Get image data for edge processing
+          const imageData = ctx.getImageData(0, 0, finalWidth, finalHeight);
+          const data = imageData.data;
+          
+          // Simple edge extension - extend edge pixels into border
+          extendEdgePixels(data, finalWidth, finalHeight, borderSize);
+          
+          // Put processed image data back
+          ctx.putImageData(imageData, 0, 0);
+          
+          // Convert to blob and then to array
+          canvas.toBlob((blob) => {
+            const reader = new FileReader();
+            reader.onload = function() {
+              const arrayBuffer = reader.result;
+              const uint8Array = new Uint8Array(arrayBuffer);
+              
+              parent.postMessage({
+                pluginMessage: {
+                  type: 'image-processed',
+                  processedData: Array.from(uint8Array)
+                }
+              }, '*');
+            };
+            reader.readAsArrayBuffer(blob);
+          }, 'image/png');
+        };
+        
+        img.onerror = function() {
+          parent.postMessage({
+            pluginMessage: {
+              type: 'processing-error',
+              error: 'Failed to load image for processing'
+            }
+          }, '*');
+        };
+        
+        img.src = 'data:image/png;base64,' + base64Data;
+        
+      } catch (error) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'processing-error',
+            error: error.message
+          }
+        }, '*');
+      }
+    }
+
+    // Extend edge pixels into border area
+    function extendEdgePixels(data, width, height, borderSize) {
+      // This is a simplified edge extension algorithm
+      // For each border pixel, find the nearest non-transparent pixel and copy its color
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const index = (y * width + x) * 4;
+          
+          // If pixel is in border area and transparent
+          if ((x < borderSize || x >= width - borderSize || 
+               y < borderSize || y >= height - borderSize) && 
+              data[index + 3] === 0) {
+            
+            // Find nearest non-transparent pixel
+            const nearestPixel = findNearestOpaquePixel(data, width, height, x, y, borderSize);
+            if (nearestPixel) {
+              data[index] = nearestPixel.r;
+              data[index + 1] = nearestPixel.g;
+              data[index + 2] = nearestPixel.b;
+              data[index + 3] = Math.min(nearestPixel.a, 128); // Semi-transparent
+            }
+          }
+        }
+      }
+    }
+
+    // Find nearest opaque pixel
+    function findNearestOpaquePixel(data, width, height, x, y, borderSize) {
+      const searchRadius = borderSize + 2;
+      
+      for (let radius = 1; radius <= searchRadius; radius++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            
+            if (nx >= borderSize && nx < width - borderSize && 
+                ny >= borderSize && ny < height - borderSize) {
+              const index = (ny * width + nx) * 4;
+              if (data[index + 3] > 0) {
+                return {
+                  r: data[index],
+                  g: data[index + 1],
+                  b: data[index + 2],
+                  a: data[index + 3]
+                };
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // Download processed image
+    function downloadProcessedImage(imageDataArray, filename) {
+      const uint8Array = new Uint8Array(imageDataArray);
+      const blob = new Blob([uint8Array], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize
+    parent.postMessage({
+      pluginMessage: { type: 'get-selection' }
+    }, '*');
+  </script>
+</body>
+</html>
