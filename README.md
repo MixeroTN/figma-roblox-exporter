@@ -51,7 +51,3 @@ The plugin uses HTML5 Canvas for Roblox optimization:
 
 ### File Naming
 Exported files: `{layer_name}_{scale}x_roblox.png`
-
-## 📝 License
-
-ISC License

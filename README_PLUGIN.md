@@ -173,7 +173,3 @@ For issues, feature requests, or questions:
 1. Check the troubleshooting section above
 2. Ensure you're using the latest version
 3. Test with simple layers first to isolate issues
-
-## License
-
-This project is licensed under the ISC License - see the main README.md file for details.

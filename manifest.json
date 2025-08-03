@@ -1,6 +1,7 @@
 {
   "name": "Roblox Image Exporter",
-  "id": "roblox-image-exporter",
+  "id": "1533855108732488534",
+  "documentAccess": "dynamic-page",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
